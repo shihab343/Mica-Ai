@@ -57,7 +57,8 @@ export default function AuthPage({ onAuthSuccess }: AuthPageProps) {
 
   // Bridge Privy authentication to Firebase auth
   useEffect(() => {
-    if (!authenticated || !user || !ready || bridgedRef.current) return;
+    const privyAppId = (import.meta.env.VITE_PRIVY_APP_ID || "").trim();
+    if (!privyAppId || !authenticated || !user || !ready || bridgedRef.current) return;
     bridgedRef.current = true;
 
     const bridgePrivyToFirebase = async () => {
@@ -252,6 +253,11 @@ export default function AuthPage({ onAuthSuccess }: AuthPageProps) {
 
   const handleWalletClick = () => {
     setError("");
+    const privyAppId = (import.meta.env.VITE_PRIVY_APP_ID || "").trim();
+    if (!privyAppId) {
+      setError("Wallet login is unavailable because Privy is not configured for this environment.");
+      return;
+    }
     login();
   };
 

@@ -198,13 +198,16 @@ const AIBuddy: React.FC = () => {
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 
       const data = await res.json();
-      const rawContent: string = data.choices?.[0]?.message?.content?.trim() || "";
+      const rawContent: string = data?.choices?.[0]?.message?.content?.trim() || "";
+      const fallbackReply = typeof data?.error === "string" && data.error.includes("missing")
+        ? "I’m ready to help — try asking me again in a moment."
+        : "Sorry, I didn’t quite catch that — can you say it again?";
 
       // The backend asks the model for a strict {"reply": "...", "emotion": "..."} JSON
       // object (see api/bot/chat.ts). Parse that out; if the model ever deviates from the
       // contract (or JSON mode isn't available), fall back to treating the raw text as the
       // reply itself with a neutral emotion, so a parsing hiccup never breaks the chat.
-      let replyText = rawContent || "Sorry, I didn't quite catch that — can you say it again?";
+      let replyText = rawContent || fallbackReply;
       let emotionKey = "neutral";
       try {
         const parsed = JSON.parse(rawContent);

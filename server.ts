@@ -9,6 +9,26 @@ import formidable from "formidable";
 const arcReadProvider = new ethers.JsonRpcProvider(process.env.ARC_RPC_URL || "https://rpc.testnet.arc.io", 5042002, { staticNetwork: true });
 const arcBalanceInflight = new Map<string, Promise<any>>();
 const arcSleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function buildFallbackBotReply(reply: string, emotion: string = "neutral") {
+  return {
+    id: "chatcmpl-local-fallback",
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: "local-fallback",
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: "assistant",
+          content: JSON.stringify({ reply, emotion }),
+        },
+        finish_reason: "stop",
+      },
+    ],
+  };
+}
+
 async function readArcUsdcBalance(address: string) {
   let last: any;
   for (let attempt = 0; attempt < 4; attempt++) {
@@ -77,6 +97,12 @@ async function startServer() {
 
       const apiKey = process.env.GROQ_API_KEY;
       
+      if (!apiKey) {
+        console.warn("GROQ_API_KEY not set; using local fallback reply");
+        res.json(buildFallbackBotReply("I’m ready to help — try asking me again in a moment."));
+        return;
+      }
+
       const defaultSystem = "You are a very friendly, helpful, and concise AI Assistant named MAHI, developed by and under the MAHIX company. You converse in a normal, highly friendly, and warm manner. Your answers MUST be short, sweet, and to the point. Always write responses in the same language as the user's message (Bengali, English, or any other language) and maintain a modern, friendly vibe.";
       const systemContent = systemInstruction || defaultSystem;
 
@@ -96,7 +122,8 @@ async function startServer() {
             ...messages
           ],
           temperature: 0.7,
-          max_tokens: 1024
+          max_tokens: 1024,
+          response_format: { type: "json_object" }
         })
       });
 

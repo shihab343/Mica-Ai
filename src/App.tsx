@@ -43,9 +43,11 @@ function MainAppContent() {
 }
 
 export default function App() {
+  const privyAppId = (import.meta.env.VITE_PRIVY_APP_ID || "").trim() || "cmqf5t8me00ls0cl86fkcuczj";
+
   return (
     <PrivyProvider
-      appId={import.meta.env.VITE_PRIVY_APP_ID || ""}
+      appId={privyAppId}
       config={{
         loginMethods: ["email", "wallet"],
         appearance: {

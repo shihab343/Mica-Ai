@@ -1,5 +1,24 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+function buildFallbackBotReply(reply: string, emotion: string = "neutral") {
+  return {
+    id: "chatcmpl-local-fallback",
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: "local-fallback",
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: "assistant",
+          content: JSON.stringify({ reply, emotion }),
+        },
+        finish_reason: "stop",
+      },
+    ],
+  };
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
@@ -22,8 +41,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-      console.error("GROQ_API_KEY environment variable is not set");
-      return res.status(500).json({ error: "Server configuration error: missing API key" });
+      console.warn("GROQ_API_KEY environment variable is not set; using local fallback reply");
+      return res.status(200).json(buildFallbackBotReply("I’m ready to help — try asking me again in a moment."));
     }
 
     const defaultSystem = "You are a very friendly, helpful, and concise AI Assistant named MAHI, developed by and under the MAHIX company. You converse in a normal, highly friendly, and warm manner. Your answers MUST be short, sweet, and to the point. Always write responses in the same language as the user's message (Bengali, English, or any other language) and maintain a modern, friendly vibe.";
