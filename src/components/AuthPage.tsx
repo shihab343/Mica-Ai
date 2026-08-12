@@ -253,7 +253,7 @@ export default function AuthPage({ onAuthSuccess }: AuthPageProps) {
 
   const handleWalletClick = () => {
     setError("");
-    const privyAppId = (import.meta.env.VITE_PRIVY_APP_ID || "").trim();
+    const privyAppId = (import.meta.env.VITE_PRIVY_APP_ID || "").trim() || "cmqf5t8me00ls0cl86fkcuczj";
     if (!privyAppId) {
       setError("Wallet login is unavailable because Privy is not configured for this environment.");
       return;
